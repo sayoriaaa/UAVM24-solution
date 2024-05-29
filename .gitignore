@@ -1,0 +1,8 @@
+University-Release
+University-Release-wx
+model/*
+*.jpg
+hub
+
+LPN/*
+!LPN/*.py
