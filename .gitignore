@@ -1,9 +1,14 @@
 University-Release
 University-Release-wx
 model/*
+figure
 *.jpg
 hub
 
 LPN/*
 !LPN/*.py
 answer.*
+
+# working on
+MuseNet.ipynb
+info.ipynb
