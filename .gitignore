@@ -9,6 +9,8 @@ LPN/*
 !LPN/*.py
 answer.*
 
+__pycache__
+bat
 # working on
 MuseNet.ipynb
 info.ipynb
