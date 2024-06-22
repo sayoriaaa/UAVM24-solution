@@ -4,6 +4,7 @@ model/*
 figure
 *.jpg
 hub
+wandb
 
 LPN/*
 !LPN/*.py

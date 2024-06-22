@@ -199,6 +199,19 @@ def init_dataset_test(name='University-Release', w=384, h=384, batchsize=128, st
 
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     return image_datasets, dataloaders, dataset_sizes
+
+environments2index = {env: idx for idx, env in enumerate(environments)}
+index2environments = [i for i in environments]
+
+def label2tensor(label, num_classes=10):
+    idxs = [environments2index[i] for i in label]
+    idxs = torch.tensor(idxs) 
+    t = torch.nn.functional.one_hot(idxs, num_classes=num_classes).float()
+    return t
+
+def tensor2label(t):
+    indices = torch.argmax(t, dim=1)
+    return [index2environments[i] for i in indices]
     
 
 
