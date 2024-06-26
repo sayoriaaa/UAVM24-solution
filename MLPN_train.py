@@ -42,10 +42,12 @@ class MLPN_:
               checkpoint_interval = 10,
               checkpoint_start = 0,
               droprate = 0.75,
+              fix_img = True, # preprocess only once
+              num_worker_imgaug = 16
               ):
         if data_dir==None:
             data_dir = os.path.join(os.getcwd(), 'University-Release', 'train')
-        image_datasets, dataloaders, dataset_sizes = init_dataset_train(data_dir, batchsize=batchsize, style=style)
+        image_datasets, dataloaders, dataset_sizes = init_dataset_train(data_dir, batchsize=batchsize, style=style, num_worker_imgaug=num_worker_imgaug)
 
         # fix setting that
         # ====================
@@ -85,13 +87,25 @@ class MLPN_:
         criterion = nn.CrossEntropyLoss()
         bestAcc, bestAp, bestEp = 0, 0, 0 
 
+        if fix_img: # significant speed up, since imgaug is rather slow
+            dataloader_drone = list()
+            dataloader_sat = list()
+            for data, data3 in tzip(dataloaders['drone'], dataloaders['satellite']):
+                dataloader_drone.append(data)
+                dataloader_sat.append(data3)
+            print('done synthesis {} style image'.format(style))
+        else:
+            dataloader_drone = dataloaders['drone']
+            dataloader_sat = dataloaders['satellite']
+
+
         for epoch in range(1, num_epochs+1):
             running_loss, running_corrects, running_corrects3 = 0.0, 0.0, 0.0
             ins_loss, dec_loss, on_loss, off_loss = 0.0, 0.0, 0.0, 0.0
             lossinfo1, lossinfo2 = 0.0, 0.0 
             optimizer = optimizer_ft
             # Iterate over data.
-            for data, data3 in tzip(dataloaders['satellite'], dataloaders['drone']):
+            for data, data3 in tzip(dataloader_sat, dataloader_drone):
                 # get the inputs
                 inputs, inputs_d, labels, _ = data
                 inputs3, inputs3_s, labels3, _ = data3
@@ -201,8 +215,10 @@ class MLPN_:
         if not os.path.isdir(self.model_dir):
             os.mkdir(self.model_dir)
         for style in environments:
+            if style=='normal':
+                continue
             print(style)
-            # self.train(data_dir=data_dir, style=style, model_name=style)
+            self.train(data_dir=data_dir, style=style, model_name=style, num_epochs=120, checkpoint_interval=20, checkpoint_start=100, num_worker_imgaug=32, fix_img=True)
 
         
 
@@ -261,4 +277,13 @@ class MLPN_:
 
 if __name__ == '__main__':
     m = MLPN_()
+    # m.train_multi_MLPNs(data_dir='/dataset/University-Release/train')
+    #style='normal'
+    #m.train(data_dir='/dataset/University-Release/train', style=style, model_name=style, num_epochs=20, checkpoint_interval=5, num_worker_imgaug=32, fix_img=True)
+    #style='rain'
+    #m.train(data_dir='/dataset/University-Release/train', style=style, model_name=style, num_epochs=20, checkpoint_interval=5, num_worker_imgaug=32, fix_img=True)
+    #style='rain'
+    #m.train(data_dir='/dataset/University-Release/train', style=style, model_name=style, num_epochs=220, checkpoint_interval=20, checkpoint_start=100, num_worker_imgaug=32, fix_img=True)
+    #style='mixed'
+    #m.train(data_dir='/dataset/University-Release/train', style=style, model_name=style, num_epochs=220, checkpoint_interval=20, checkpoint_start=100, num_worker_imgaug=32, fix_img=True)
     m.train_multi_MLPNs(data_dir='/dataset/University-Release/train')
