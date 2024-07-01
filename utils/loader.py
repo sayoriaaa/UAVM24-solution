@@ -177,7 +177,7 @@ def init_dataset_train(name='University-Release', w=384, h=384, pad=10, batchsiz
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     return image_datasets, dataloaders, dataset_sizes
 
-def init_dataset_test(name='University-Release', w=384, h=384, batchsize=128, style='mixed', num_worker=16):
+def init_dataset_test(data_dir=None, w=384, h=384, batchsize=128, style='mixed', num_worker=16):
     query_list = ['query_satellite', 'query_drone', 'query_street']
     gallery_list = ['gallery_satellite','gallery_drone', 'gallery_street']
 
@@ -186,10 +186,12 @@ def init_dataset_test(name='University-Release', w=384, h=384, batchsize=128, st
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
+    if data_dir==None:
+        data_dir = os.path.join(os.getcwd(), 'University-Release', 'test')
 
-    image_datasets = {x: MyDataset(os.path.join(os.getcwd(), name, 'test', x), style=style, stage='test',h=h, w=w)
+    image_datasets = {x: MyDataset(os.path.join(data_dir, x), style=style, stage='test',h=h, w=w)
                       if 'drone' in x 
-                      else datasets.ImageFolder( os.path.join(name, 'test', x) ,data_transforms) 
+                      else datasets.ImageFolder(os.path.join(data_dir, x) ,data_transforms) 
                       for x in (query_list+gallery_list)}
 
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batchsize, shuffle=False, num_workers=0) 

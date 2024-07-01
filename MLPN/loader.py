@@ -903,7 +903,7 @@ class MyDroneData_train(Data.Dataset):
 
         transform_train_list = [
             # transforms.RandomResizedCrop(size=(opt.h, opt.w), scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
-            transforms.Resize((h, w), interpolation=3),
+            transforms.Resize((h, w), interpolation=InterpolationMode.BICUBIC),
             transforms.Pad(pad, padding_mode='edge'),
             transforms.RandomCrop((h, w)),
             transforms.RandomHorizontalFlip(),
@@ -912,7 +912,7 @@ class MyDroneData_train(Data.Dataset):
         ]
 
         transform_satellite_list = [
-            transforms.Resize((h, w), interpolation=3),
+            transforms.Resize((h, w), interpolation=InterpolationMode.BICUBIC),
             transforms.Pad(pad, padding_mode='edge'),
             transforms.RandomAffine(90),
             transforms.RandomCrop((h, w)),
@@ -932,6 +932,7 @@ class MyDroneData_train(Data.Dataset):
                                                     hue=0)] + transform_train_list
             transform_satellite_list = [transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1,
                                                         hue=0)] + transform_satellite_list
+                                                        
 
         self.root = root
         self.imgs = imgs
@@ -963,12 +964,15 @@ class MyDroneData_train(Data.Dataset):
             weather = np.random.choice(self.envir_list)
         else:
             weather = self.style
-        if weather != 'normal':
-            self.transform.insert(2, WeatherTransform(aug=weather))
-            # print('APPENDED!')
+
+        transforms_d = self.transform
+        if weather != 'normal':    
+            # transforms_d.insert(2, WeatherTransform(aug=weather))
+            transforms_d = [None] + transforms_d
+            transforms_d[0] = WeatherTransform(aug=weather)
 
         # load img 1
-        transform_ = transforms.Compose(self.transform)
+        transform_ = transforms.Compose(transforms_d)
         path, _cls, target = self.imgs[index]
         img = self.loader(path)
         img = transform_(img)
@@ -1015,7 +1019,7 @@ class MySatData_train(Data.Dataset):
 
         transform_train_list = [
             # transforms.RandomResizedCrop(size=(opt.h, opt.w), scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
-            transforms.Resize((h, w), interpolation=3),
+            transforms.Resize((h, w), interpolation=InterpolationMode.BICUBIC),
             transforms.Pad(pad, padding_mode='edge'),
             transforms.RandomCrop((h, w)),
             transforms.RandomHorizontalFlip(),
@@ -1024,7 +1028,7 @@ class MySatData_train(Data.Dataset):
         ]
 
         transform_satellite_list = [
-            transforms.Resize((h, w), interpolation=3),
+            transforms.Resize((h, w), interpolation=InterpolationMode.BICUBIC),
             transforms.Pad(pad, padding_mode='edge'),
             transforms.RandomAffine(90),
             transforms.RandomCrop((h, w)),
@@ -1075,8 +1079,12 @@ class MySatData_train(Data.Dataset):
             weather = np.random.choice(self.envir_list)
         else:
             weather = self.style
-        if weather != 'normal':
-            self.d_transform.insert(2, WeatherTransform(aug=weather))
+
+        transforms_d = self.d_transform
+        if weather != 'normal':      
+            #transform_d.insert(2, WeatherTransform(aug=weather))
+            transforms_d = [None] + transforms_d
+            transforms_d[0] = WeatherTransform(aug=weather)
             # print('APPENDED!')
         
         # load img 1
@@ -1089,7 +1097,7 @@ class MySatData_train(Data.Dataset):
         d_root = self.root + self.view
         d_path = self._get_pair_sample(d_root, _cls)
         d_img = self.loader(d_path)
-        d_transform_ = transforms.Compose(self.d_transform)
+        d_transform_ = transforms.Compose(transforms_d)
         d_img = d_transform_(d_img)
         return img, d_img, target, weather
 

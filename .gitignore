@@ -14,3 +14,7 @@ __pycache__
 bat
 # working on
 info.ipynb
+
+sat_net_170
+*.json
+
